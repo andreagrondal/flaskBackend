@@ -1,5 +1,5 @@
-from flask import Flask, redirect, render_template, request, url_for, jsonify
-# from flask_bootstrap import Bootstrap5
+from flask import Flask, render_template, request, jsonify
+
 import openai
 import os
 from flask_cors import CORS
@@ -8,18 +8,14 @@ openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 app = Flask(__name__)
 CORS(app)
-# app.config["SECRET_KEY"] = "8BYkEfBA6O6donzWlSihBXox7C0sKR6b"
 openai.api_key = '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'
-# bootstrap = Bootstrap5(app)
 
 
 @app.route("/<dest>", methods=["GET", "POST"])
 def home(dest):
     if request.method == "POST":
-        print(dest)
 
         trip_response = get_trip(dest)
-        print(trip_response)
 
         return jsonify(trip_response)
 
@@ -28,7 +24,7 @@ def home(dest):
 
 def get_trip(regions, klima, interests, countries):
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4",
         messages=[
             {
               "role": "system",
@@ -42,11 +38,46 @@ def get_trip(regions, klima, interests, countries):
         ],
         temperature=0.8,
         max_tokens=800,
+
     )
 
     content_list = response.choices[0].message.content
 
     return content_list
+
+
+def get_daytrip(destination):
+    print(1, destination)
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[
+            {
+              "role": "system",
+              "content": "You are a travel guide who is an expert at planning where to go on vacation."
+              "The user is gonna tell you what they want to do that day, and you will give them a good and detailed plan for the day, with times and how to get there."
+            },
+            {
+                "role": "user",
+                "content": f"What do you want to do?: {destination}"
+            }
+        ],
+        temperature=0.8,
+        max_tokens=800,
+    )
+
+    content_list = response.choices[0].message.content
+
+    print(2, content_list)
+    return content_list
+
+
+@app.route("/generateDay", methods=["GET", "POST"])
+def day():
+    data = request.get_json()
+
+    trip_response = get_daytrip(data)
+
+    return jsonify(trip_response)
 
 
 @app.route("/generateTravelPlan", methods=["POST"])
